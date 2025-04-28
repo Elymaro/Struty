@@ -84,4 +84,4 @@ python3 struty.py -x http://127.0.0.1:8080 http://target.com/login/user.action
 
 ## Example
 
-![image](https://github.com/user-attachments/assets/7f9feaff-86ef-4149-b4e0-e72259bfe548)
+![image](https://github.com/Elymaro/Struty/blob/main/assets/struty.png)

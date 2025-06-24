@@ -9,6 +9,11 @@ import html
 from urllib.parse import urlsplit, urlunsplit, urlparse
 from colorama import Fore, Style, init
 
+# ################################################################
+# ####  Developped by Aurélien BOURDOIS                      #####
+# ####  https://www.linkedin.com/in/aurelien-bourdois/       #####
+# ################################################################
+
 logo = r"""
               ____
            ,-'-,  `---._

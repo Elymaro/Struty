@@ -6,7 +6,7 @@ import re
 import argparse
 import urllib3
 import html
-from urllib.parse import urlsplit, urlunsplit, urlparse
+from urllib.parse import urlsplit, urlunsplit, urlparse, quote, quote_plus
 from colorama import Fore, Style, init
 
 # ################################################################
@@ -32,6 +32,12 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 command_value = "echo struty"
 intended_response_value = "struty"
 DEFAULT_TIMEOUT = 5
+
+encoded_command = list(set([
+    command_value,              # echo struty
+    quote_plus(command_value),  # echo+struty
+    quote(command_value)        # echo%20struty
+]))
 
 # Validate URLs
 def is_valid_url(url):
@@ -186,10 +192,13 @@ struts_vulns = [
             "User-Agent" : user_agent,
             "X-Scan": "S2-DevMode"
         },
-        "check": lambda r: any([ 
-            intended_response_value in r.text and command_value not in r.text and command_value.replace(" ", "+") not in r.text
-            for intended_response_value in [intended_response_value]  # Checks if intended_response_value is present in r.text AND ensures that at least one occurrence of intended_response_value in r.text does not match the modified command_value (with spaces replaced by "+")
-        ])
+        "check": lambda r: (
+            any(intended_response_value in line for line in r.text.splitlines()) and
+            all(
+                all(encoded not in line for encoded in encoded_command)
+                for line in r.text.splitlines()
+            )
+        )
     },
     {
         "id": "S2-001",
@@ -203,10 +212,13 @@ struts_vulns = [
             "User-Agent" : user_agent,
             "X-Scan": "S2-001"
         },
-        "check": lambda r: any([ 
-            intended_response_value in r.text and command_value not in r.text and command_value.replace(" ", "+") not in r.text
-            for intended_response_value in [intended_response_value]  # Checks if intended_response_value is present in r.text AND ensures that at least one occurrence of intended_response_value in r.text does not match the modified command_value (with spaces replaced by "+")
-        ])
+        "check": lambda r: (
+            any(intended_response_value in line for line in r.text.splitlines()) and
+            all(
+                all(encoded not in line for encoded in encoded_command)
+                for line in r.text.splitlines()
+            )
+        )
     },
     {
         "id": "S2-003",
@@ -233,10 +245,13 @@ struts_vulns = [
             "Content-Type": "application/x-www-form-urlencoded",
             "X-Scan": "S2-005"
         },
-        "check": lambda r: any([ 
-            intended_response_value in r.text and command_value not in r.text and command_value.replace(" ", "+") not in r.text
-            for intended_response_value in [intended_response_value] 
-        ])
+        "check": lambda r: (
+            any(intended_response_value in line for line in r.text.splitlines()) and
+            all(
+                all(encoded not in line for encoded in encoded_command)
+                for line in r.text.splitlines()
+            )
+        )
     },
     {
         "id": "S2-008",
@@ -250,10 +265,13 @@ struts_vulns = [
             "User-Agent" : user_agent,
             "X-Scan": "S2-008"
         },
-        "check": lambda r: any([ 
-            intended_response_value in r.text and command_value not in r.text and command_value.replace(" ", "+") not in r.text
-            for intended_response_value in [intended_response_value]
-        ])
+        "check": lambda r: (
+            any(intended_response_value in line for line in r.text.splitlines()) and
+            all(
+                all(encoded not in line for encoded in encoded_command)
+                for line in r.text.splitlines()
+            )
+        )
     },
     {
         "id": "S2-012",
@@ -266,10 +284,13 @@ struts_vulns = [
             "User-Agent" : user_agent,
             "X-Scan": "S2-013"
         },
-        "check": lambda r: any([ 
-            intended_response_value in r.text and command_value not in r.text and command_value.replace(" ", "+") not in r.text
-            for intended_response_value in [intended_response_value]
-        ])
+        "check": lambda r: (
+            any(intended_response_value in line for line in r.text.splitlines()) and
+            all(
+                all(encoded not in line for encoded in encoded_command)
+                for line in r.text.splitlines()
+            )
+        )
     },
     {
         "id": "S2-013",
@@ -282,10 +303,13 @@ struts_vulns = [
             "User-Agent" : user_agent,
             "X-Scan": "S2-013"
         },
-        "check": lambda r: any([ 
-            intended_response_value in r.text and command_value not in r.text and command_value.replace(" ", "+") not in r.text
-            for intended_response_value in [intended_response_value]  # Checks if intended_response_value is present in r.text AND ensures that at least one occurrence of intended_response_value in r.text does not match the modified command_value (with spaces replaced by "+")
-        ])
+        "check": lambda r: (
+            any(intended_response_value in line for line in r.text.splitlines()) and
+            all(
+                all(encoded not in line for encoded in encoded_command)
+                for line in r.text.splitlines()
+            )
+        )
     },
     {
         "id": "S2-016",
@@ -296,10 +320,13 @@ struts_vulns = [
             "User-Agent" : user_agent,
             "X-Scan": "S2-016"
         },
-        "check": lambda r: any([ 
-            intended_response_value in r.text and command_value not in r.text and command_value.replace(" ", "+") not in r.text
-            for intended_response_value in [intended_response_value]  # Checks if intended_response_value is present in r.text AND ensures that at least one occurrence of intended_response_value in r.text does not match the modified command_value (with spaces replaced by "+")
-        ])
+        "check": lambda r: (
+            any(intended_response_value in line for line in r.text.splitlines()) and
+            all(
+                all(encoded not in line for encoded in encoded_command)
+                for line in r.text.splitlines()
+            )
+        )
     },
     {
         "id": "S2-017 (Open-Redirect)",
@@ -310,7 +337,7 @@ struts_vulns = [
             "User-Agent" : user_agent,
             "X-Scan": "S2-017"
         },
-        "check": lambda r: intended_response_value in str(r.headers.values())
+        "check": lambda r: r.headers.get("Location", "") == f"https://fake_domain.lab/{intended_response_value}/url"
     },
     {
         "id": "S2-019",
@@ -324,10 +351,13 @@ struts_vulns = [
             "User-Agent" : user_agent,
             "X-Scan": "S2-019"
         },
-        "check": lambda r: all([
-            intended_response_value in r.text,
-            command_value.replace(" ", "+") not in r.text
-        ])
+        "check": lambda r: (
+            any(intended_response_value in line for line in r.text.splitlines()) and
+            all(
+                all(encoded not in line for encoded in encoded_command)
+                for line in r.text.splitlines()
+            )
+        )
     },
     {
         "id": "S2-032",
@@ -345,10 +375,13 @@ struts_vulns = [
             "User-Agent" : user_agent,
             "X-Scan": "S2-032",
         },
-        "check": lambda r: any([ 
-            intended_response_value in r.text and command_value not in r.text and command_value.replace(" ", "+") not in r.text
-            for intended_response_value in [intended_response_value]
-        ])
+        "check": lambda r: (
+            any(intended_response_value in line for line in r.text.splitlines()) and
+            all(
+                all(encoded not in line for encoded in encoded_command)
+                for line in r.text.splitlines()
+            )
+        )
     },
     {
         "id": "S2-037",
@@ -358,10 +391,13 @@ struts_vulns = [
             "User-Agent" : user_agent,
             "X-Scan": "S2-037"
         },
-        "check": lambda r: any([ 
-            intended_response_value in r.text and command_value not in r.text and command_value.replace(" ", "+") not in r.text
-            for intended_response_value in [intended_response_value]
-        ])
+        "check": lambda r: (
+            any(intended_response_value in line for line in r.text.splitlines()) and
+            all(
+                all(encoded not in line for encoded in encoded_command)
+                for line in r.text.splitlines()
+            )
+        )
     },
     {
         "id": "S2-045",
@@ -378,10 +414,13 @@ struts_vulns = [
             "User-Agent": user_agent,
             "X-Scan": "S2-045"
         },
-        "check": lambda r: any([ 
-            intended_response_value in r.text and command_value not in r.text and command_value.replace(" ", "+") not in r.text
-            for intended_response_value in [intended_response_value]
-        ])
+        "check": lambda r: (
+            any(intended_response_value in line for line in r.text.splitlines()) and
+            all(
+                all(encoded not in line for encoded in encoded_command)
+                for line in r.text.splitlines()
+            )
+        )
     },
     {
         "id": "S2-053",
@@ -398,10 +437,13 @@ struts_vulns = [
             "User-Agent" : user_agent,
             "X-Scan": "S2-053"
         },
-        "check": lambda r: any([ 
-            intended_response_value in r.text and command_value not in r.text and command_value.replace(" ", "+") not in r.text
-            for intended_response_value in [intended_response_value]
-        ])
+        "check": lambda r: (
+            any(intended_response_value in line for line in r.text.splitlines()) and
+            all(
+                all(encoded not in line for encoded in encoded_command)
+                for line in r.text.splitlines()
+            )
+        )
     },
     {
         "id": "S2-057_v2.3.20",
@@ -411,10 +453,13 @@ struts_vulns = [
             "User-Agent" : user_agent,
             "X-Scan": "S2-057_v2.5.16"
         },
-        "check": lambda r: any([ 
-            intended_response_value in r.text and command_value not in r.text and command_value.replace(" ", "+") not in r.text
-            for intended_response_value in [intended_response_value]
-        ])
+        "check": lambda r: (
+            any(intended_response_value in line for line in r.text.splitlines()) and
+            all(
+                all(encoded not in line for encoded in encoded_command)
+                for line in r.text.splitlines()
+            )
+        )
     },
     {
         "id": "S2-057_v2.3.34",
@@ -424,10 +469,13 @@ struts_vulns = [
             "User-Agent" : user_agent,
             "X-Scan": "S2-057_v2.3.34"
         },
-        "check": lambda r: any([ 
-            intended_response_value in r.text and command_value not in r.text and command_value.replace(" ", "+") not in r.text
-            for intended_response_value in [intended_response_value]
-        ])
+        "check": lambda r: (
+            any(intended_response_value in line for line in r.text.splitlines()) and
+            all(
+                all(encoded not in line for encoded in encoded_command)
+                for line in r.text.splitlines()
+            )
+        )
     },
     {
         "id": "S2-057_v2.5.16",
@@ -437,10 +485,13 @@ struts_vulns = [
             "User-Agent" : user_agent,
             "X-Scan": "S2-057_v2.5.16"
         },
-        "check": lambda r: any([ 
-            intended_response_value in r.text and command_value not in r.text and command_value.replace(" ", "+") not in r.text
-            for intended_response_value in [intended_response_value]
-        ])
+        "check": lambda r: (
+            any(intended_response_value in line for line in r.text.splitlines()) and
+            all(
+                all(encoded not in line for encoded in encoded_command)
+                for line in r.text.splitlines()
+            )
+        )
     },{
         "id": "S2-059",
         "method": "GET_POST",
@@ -453,10 +504,13 @@ struts_vulns = [
             "User-Agent" : user_agent,
             "X-Scan": "S2-059"
         },
-        "check": lambda r: any([ 
-            intended_response_value in r.text and command_value not in r.text and command_value.replace(" ", "+") not in r.text
-            for intended_response_value in [intended_response_value]
-        ])
+        "check": lambda r: (
+            any(intended_response_value in line for line in r.text.splitlines()) and
+            all(
+                all(encoded not in line for encoded in encoded_command)
+                for line in r.text.splitlines()
+            )
+        )
     },
     {
         "id": "S2-061",
@@ -470,10 +524,13 @@ struts_vulns = [
             "User-Agent" : user_agent,
             "X-Scan": "S2-061"
         },
-        "check": lambda r: any([ 
-            intended_response_value in r.text and command_value not in r.text and command_value.replace(" ", "+") not in r.text
-            for intended_response_value in [intended_response_value]
-        ])
+        "check": lambda r: (
+            any(intended_response_value in line for line in r.text.splitlines()) and
+            all(
+                all(encoded not in line for encoded in encoded_command)
+                for line in r.text.splitlines()
+            )
+        )
     },
     {
         "id": "S2-066",
@@ -661,7 +718,6 @@ for vuln in struts_vulns:
                         allow_redirects=False
                     )
                     if response_post and vuln["check"](response_post):
-                        print('before0')
                         print(Fore.GREEN + f"[!] {vuln['id']} vulnerable!")
                         break
 
@@ -682,7 +738,6 @@ for vuln in struts_vulns:
                         )
                         print(html.unescape(response_post.text).lower())
                         if response_post and vuln["check"](response_post):
-                            print('before1')
                             print(Fore.GREEN + f"[!] {vuln['id']} vulnerable!")
                             break
                         post_attempts += 1
@@ -702,5 +757,6 @@ for vuln in struts_vulns:
 
         except requests.exceptions.RequestException as e:
             if attempt == 2:
-               raise e
+                print(Fore.YELLOW + f"[!] Retry {attempt + 1}/3 due to: {e}")
+                break
             print(Fore.YELLOW + f"[!] Retry {attempt + 1}/3 due to: {e}")
